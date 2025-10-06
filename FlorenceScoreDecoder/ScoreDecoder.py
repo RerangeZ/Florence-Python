@@ -1,12 +1,13 @@
 from music21 import converter
 from music21.stream import Score, Part, Opus
 from music21.note import Note
-from Objects import *
+from Objects.Word import Word, TimeSpan
+
 
 class ScoreDecoder:
     oriScoreObj: Score
     worldList: list[Word]
-    
+
     def __init__(self, scorePath: str) -> None:
         self.worldList = []  # 初始化空列表
         parsed = converter.parse(scorePath)
