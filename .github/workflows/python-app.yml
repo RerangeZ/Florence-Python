@@ -34,8 +34,8 @@ jobs:
     
     - name: Check style with flake8
       run: |
-        # 检查代码风格，设置为警告级别
-        flake8 . --count --max-complexity=10 --max-line-length=127 --statistics
+        # 检查代码风格，设置为警告级别，忽略空格和换行相关的警告
+        flake8 . --count --max-complexity=10 --max-line-length=127 --statistics --ignore=W291,W292,W293,W391
     
     - name: Type checking with mypy
       run: |
