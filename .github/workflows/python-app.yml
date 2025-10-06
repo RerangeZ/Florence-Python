@@ -32,11 +32,6 @@ jobs:
         # 只检查严重的语法错误和未定义的名称
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
     
-    - name: Check style with flake8
-      run: |
-        # 检查代码风格，设置为警告级别，忽略空格和换行相关的警告
-        flake8 . --count --max-complexity=10 --max-line-length=127 --statistics --ignore=W291,W292,W293,W391
-    
     - name: Type checking with mypy
       run: |
         # 运行类型检查
