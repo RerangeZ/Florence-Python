@@ -22,6 +22,16 @@ class ScoreDecoder:
             self.oriScoreObj = parsed.scores[0] if parsed.scores else Score()
         else:
             raise ValueError(f"解析musicXml失败，非法类型: {type(parsed)}")
+        
+    def check(self)->None:
+        for note in self.oriScoreObj.flatten().notes:
+            if not isinstance(note, Note):  # 跳过非音符对象
+                continue
+            
+            freq = note.pitch.frequency
+
+            if freq <130:
+                raise Exception("Florence Engine的音域设定在130Hz(C3)以上。")
     
     def decode(self) -> None:
         for note in self.oriScoreObj.flatten().notes:
