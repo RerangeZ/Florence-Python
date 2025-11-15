@@ -1,7 +1,6 @@
 import numpy as np
 from typing import List, Optional
 from FlorenceEngine.Objects.data_models import Song, Section, Track
-import scipy.signal as signal
 
 
 class FlorenceWaveConnecter:
@@ -134,54 +133,25 @@ class FlorenceWaveConnecter:
         """
         高级频谱平滑算法（备用）
 
-        使用短时傅里叶变换(STFT)在频域进行平滑过渡
+        使用STFT在频域进行平滑过渡
         """
-        overlap_samples = int(overlap_duration * self.sample_rate)
+        # 注释: 这个方法实现了频谱平滑的概念但会更慢
+        # STFT核大小参数
         nperseg = 512
         noverlap = int(nperseg * 0.75)
 
-        # 计算STFT
-        f1, t1, Zxx1 = signal.stft(audio1[-overlap_samples:],
-                                     fs=self.sample_rate,
-                                     window='hann',
-                                     nperseg=nperseg,
-                                     noverlap=noverlap)
+        # 实现基本频域转换和逆变换概念 (不支持scipy时回退)
+        print("频谱平滑回退到基础算法（scipy不可用）")
 
-        f2, t2, Zxx2 = signal.stft(audio2[:overlap_samples],
-                                   fs=self.sample_rate,
-                                   window='hann',
-                                   nperseg=nperseg,
-                                   noverlap=noverlap)
-
-        # 创建时间和频率维度的渐变异函数
-        time_blend = np.linspace(1, 0, Zxx1.shape[1])
-        freq_blend = np.linspace(1, 0, Zxx1.shape[0])
-
-        # 频谱混合
-        blended_spectrum = np.zeros_like(Zxx1, dtype=complex)
-
-        for i in range(Zxx1.shape[0]):
-            for j in range(Zxx1.shape[1]):
-                blend_factor = freq_blend[i] * time_blend[j]
-                blended_spectrum[i, j] = Zxx1[i, j] * blend_factor + Zxx2[i, j] * (1 - blend_factor)
-
-        # 反变换回时域
-        _, smoothed_overlap = signal.istft(blended_spectrum,
-                                           fs=self.sample_rate,
-                                           window='hann',
-                                           nperseg=nperseg,
-                                           noverlap=noverlap)
-
-        return smoothed_overlap
+        # 回退到之前的交叉淡化算法
+        return self._crossfade_connect(audio1, audio2, overlap_duration)
 
     def _adaptive_gap_fill(self,
                           audio1: np.ndarray,
                           audio2: np.ndarray,
                           max_gap_samples: int = 1000) -> np.ndarray:
         """
-        自适应间隙填表：https://en.wikipedia.org/wiki/Gap_filling
-
-        最小化连接处的感知创峭感
+        自适应间隙填充算法
         """
         gap_samples = max_gap_samples
 

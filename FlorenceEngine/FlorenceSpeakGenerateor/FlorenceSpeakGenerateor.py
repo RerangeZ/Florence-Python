@@ -5,14 +5,29 @@ from typing import List
 from FlorenceEngine.Objects.data_models import Song, Word
 import wave
 import io
+from xpinyin import Pinyin
 
 
 class FlorenceSpeakGenerateor:
     """输入一个song对象，对里面的word对象处理，根据lrc合成oriWave"""
+    #拼音转换器
+    p = Pinyin()
+    #写死的采样率
+    ESPEAK_SAMPLE_RATE = 44100  # Hz 
 
     def __init__(self):
         if not shutil.which("espeak-ng"):
             print("错误: 'espeak-ng' 命令未找到。请确保已经安装eSpeak-NG并添加到PATH环境变量中。")
+
+    @staticmethod
+    def judgeChinese(string:str)->bool:
+        """
+        如果全是中文，则返回True
+        """
+        for char in string:
+            if '\u4e00' <= char <= '\u9fa5':
+                return True
+        return False
 
     def generate_song_speech(self, song: Song) -> Song:
         """
@@ -42,99 +57,71 @@ class FlorenceSpeakGenerateor:
         使用eSpeak-NG合成单个词语的语音
 
         Args:
-            lyric: 需要合成的歌词（拼音或英文）
+            lyric: 需要合成的歌词（拼音）
 
         Returns:
             音频数据numpy数组
         """
-        if not shutil.which("espeak-ng"):
-            # 创建静默音频作为替代
-            sample_rate = 22050
-            duration = 0.5  # 假设每个字0.5秒
-            samples = int(sample_rate * duration)
-            silence = np.zeros(samples, dtype=np.float32)
-            return silence
+        
+        if self.judgeChinese(lyric):
+            lyric = self.p.get_pinyin(lyric, ' ')
 
-        try:
-            # 根据文本类型选择不同的eSpeak语音
-            if self._is_chinese_pinyin(lyric):
-                # 使用拼音音调格式
-                formatted_text = f"[{lyric}]"
-                voice = "cmn-latn-pinyin"
-            else:
-                # 普通英文
-                formatted_text = lyric
-                voice = "en"
 
-            command = [
-                "espeak-ng",
-                "-v", voice,
-                "-s", "150",  # 语速
-                "-p", "50",   # 音调
-                "--stdout",
-                formatted_text
-            ]
+        # 使用拼音音调格式
+        formatted_text = f"[[{lyric}]]"
+        voice = "cmn-latn-pinyin"
 
-            result = subprocess.run(
-                command,
-                check=True,
-                capture_output=True
-            )
 
-            # 将WAV数据转换为numpy数组
-            audio_data = self._wav_bytes_to_numpy(result.stdout)
-            return audio_data
+        command = [
+            "espeak-ng",
+            "-v", voice,
+            "-s", "150",  # 语速
+            "-p", "50",   # 音调
+            "--stdout",
+            formatted_text
+        ]
 
-        except subprocess.CalledProcessError as e:
-            print(f"eSpeak-NG执行出错：{e}")
-            return self._generate_silence(0.5)
-        except Exception as e:
-            print(f"语音合成出错：{e}")
-            return self._generate_silence(0.5)
+        result = subprocess.run(
+            command,
+            check=True,
+            capture_output=True
+        )
 
-    def _is_chinese_pinyin(self, text: str) -> bool:
-        """判断是否为拼音（包含数字）"""
-        import re
-        return bool(re.search(r'[a-zA-Z]+\d', text))
+        # 将WAV数据转换为numpy数组
+        audio_data = self._wav_bytes_to_numpy(result.stdout)
+        return audio_data
+
+
 
     def _wav_bytes_to_numpy(self, wav_bytes: bytes) -> np.ndarray:
         """将WAV字节数据转换为numpy数组"""
-        try:
-            # 使用wave模块解析WAV数据
-            wav_file = wave.open(io.BytesIO(wav_bytes), 'rb')
 
-            # 获取音频参数
-            n_channels = wav_file.getnchannels()
-            sample_width = wav_file.getsampwidth()
-            n_frames = wav_file.getnframes()
+        # 使用wave模块解析WAV数据
+        wav_file = wave.open(io.BytesIO(wav_bytes), 'rb')
 
-            # 读取所有帧
-            frames = wav_file.readframes(n_frames)
-            wav_file.close()
+        # 获取音频参数
+        n_channels = wav_file.getnchannels()
+        sample_width = wav_file.getsampwidth()
+        n_frames = wav_file.getnframes()
 
-            # 转换为numpy数组
-            if sample_width == 2:  # 16-bit PCM
-                audio_data = np.frombuffer(frames, dtype=np.int16)
-                # 归一化到[-1, 1]
-                audio_data = audio_data.astype(np.float32) / 32768.0
-            elif sample_width == 1:  # 8-bit PCM
-                audio_data = np.frombuffer(frames, dtype=np.uint8)
-                # 归一化到[-1, 1]
-                audio_data = (audio_data.astype(np.float32) - 128) / 128.0
-            else:
-                raise ValueError(f"不支持的采样宽度: {sample_width}")
+        # 读取所有帧
+        frames = wav_file.readframes(n_frames)
+        wav_file.close()
 
-            # 如果是立体声，转换为单声道
-            if n_channels == 2:
-                audio_data = audio_data.reshape(-1, 2).mean(axis=1)
+        # 转换为numpy数组
+        if sample_width == 2:  # 16-bit PCM
+            audio_data = np.frombuffer(frames, dtype=np.int16)
+            # 归一化到[-1, 1]
+            audio_data = audio_data.astype(np.float32) / 32768.0
+        elif sample_width == 1:  # 8-bit PCM
+            audio_data = np.frombuffer(frames, dtype=np.uint8)
+            # 归一化到[-1, 1]
+            audio_data = (audio_data.astype(np.float32) - 128) / 128.0
+        else:
+            raise ValueError(f"不支持的采样宽度: {sample_width}")
 
-            return audio_data
+        # 如果是立体声，转换为单声道
+        if n_channels == 2:
+            audio_data = audio_data.reshape(-1, 2).mean(axis=1)
 
-        except Exception as e:
-            print(f"WAV转换出错：{e}")
-            return self._generate_silence(0.5)
-
-    def _generate_silence(self, duration: float, sample_rate: int = 22050) -> np.ndarray:
-        """生成静音"""
-        samples = int(sample_rate * duration)
-        return np.zeros(samples, dtype=np.float32)
+        return audio_data

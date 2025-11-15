@@ -98,9 +98,6 @@ class FlorenceOutputGenerater:
         # 标准化音量
         processed = self._normalize_audio(processed)
 
-        # 可选的音质优化
-        processed = self._optimize_audio_quality(processed)
-
         return processed
 
     def _prevent_clipping(self, audio: np.ndarray) -> np.ndarray:
@@ -149,79 +146,6 @@ class FlorenceOutputGenerater:
             normalized = audio
 
         return normalized
-
-    def _optimize_audio_quality(self, audio: np.ndarray) -> np.ndarray:
-        """
-        可选的音质优化
-        - 添加轻微的混响效果
-        - 高频增强
-        - 动态范围压缩
-        """
-        try:
-            # 轻微的高频增强
-            audio_enhanced = self._high_freq_boost(audio)
-
-            # 简单的动态范围压缩
-            audio_compressed = self._simple_compressor(audio_enhanced)
-
-            return audio_compressed
-
-        except Exception as e:
-            print(f"音质优化出错：{e}，返回原始音频")
-            return audio
-
-    def _high_freq_boost(self, audio: np.ndarray, boost_db: float = 2.0) -> np.ndarray:
-        """简单的高频增强"""
-        try:
-            import scipy.signal as signal
-
-            # 简单的二阶高通滤波器
-            nyquist = self.sample_rate / 2
-            high_cutoff = 2000 / nyquist
-            b, a = signal.butter(2, high_cutoff, btype='high')
-
-            # 滤波
-            filtered = signal.filtfilt(b, a, audio)
-
-            # 混合原始信号和滤波后的信号
-            boost_factor = 10 ** (boost_db / 20)
-            enhanced = audio + boost_factor * filtered * 0.3
-
-            return enhanced
-
-        except ImportError:
-            print("scipy未安装，跳过高频增强")
-            return audio
-        except Exception as e:
-            print(f"高频增强出错：{e}")
-            return audio
-
-    def _simple_compressor(self, audio: np.ndarray,
-                          threshold_db: float = -10.0,
-                          ratio: float = 3.0) -> np.ndarray:
-        """简单的软膝压缩器"""
-        try:
-            # 转换为dB
-            rms_level_db = 20 * np.log10(np.sqrt(np.mean(audio ** 2)) + 1e-10)
-
-            # 软膝压缩
-            if rms_level_db > threshold_db:
-                # 计算增益降低量
-                excess_level = rms_level_db - threshold_db
-                compressed_excess = excess_level / ratio
-                gain_reduction = excess_level - compressed_excess
-
-                # 应用增益降低
-                linear_gain = 10 ** (-gain_reduction / 20)
-                compressed = audio * linear_gain
-            else:
-                compressed = audio
-
-            return compressed
-
-        except Exception as e:
-            print(f"压缩器处理出错：{e}")
-            return audio
 
     def _save_wav_file(self, audio_data: np.ndarray, output_path: str) -> None:
         """
