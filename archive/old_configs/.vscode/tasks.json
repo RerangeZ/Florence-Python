@@ -1,0 +1,25 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "生成 requirements.txt",
+            "type": "shell",
+            "command": "& ${workspaceFolder}/FlorenceEnv/Scripts/Activate.ps1; pip freeze > requirements.txt",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": [],
+            "options": {
+                "shell": {
+                    "executable": "powershell.exe",
+                    "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command"]
+                }
+            }
+        }
+    ]
+}
