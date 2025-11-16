@@ -2,7 +2,7 @@ from tkinter import filedialog
 import tkinter as tk
 import os
 
-def selectScoreFile(root_dir: str | None = None) -> str | None:
+def selectScoreFile(relative_path: str ) -> str | None:
     """
     打开文件选择对话框选择乐谱文件
     
@@ -13,8 +13,8 @@ def selectScoreFile(root_dir: str | None = None) -> str | None:
     root.withdraw()  # 隐藏主窗口
     
     # 获取 input 目录的绝对路径
-    base_dir = root_dir if root_dir else os.getcwd()
-    input_dir = os.path.join(base_dir, "input")
+    base_dir = os.getcwd()
+    input_dir = os.path.join(base_dir, relative_path)
     
     # 确保 input 目录存在
     if not os.path.exists(input_dir):

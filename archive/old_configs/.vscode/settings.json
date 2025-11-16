@@ -1,4 +1,0 @@
-{
-    // 只在打开的文件中显示诊断（减少干扰）
-    "python.analysis.diagnosticMode": "openFilesOnly"
-}

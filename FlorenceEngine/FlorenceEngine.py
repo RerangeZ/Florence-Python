@@ -44,8 +44,6 @@ class FlorenceEngine:
             sample_rate=sample_rate
         )
 
-        print("Florence引擎初始化完成")
-
     def select_and_process(self) -> Optional[str]:
         """
         提供文件选择器让用户选择乐谱文件，并处理整个工程
@@ -55,7 +53,7 @@ class FlorenceEngine:
         """
         try:
             # 使用文件选择器选择MusicXML文件
-            score_file = selectScoreFile()
+            score_file = selectScoreFile(self.get_engine_info()['input_directory'])
             if not score_file:
                 print("用户取消文件选择")
                 return None
@@ -78,47 +76,39 @@ class FlorenceEngine:
         Returns:
             生成的WAV文件路径，如果处理失败则返回None
         """
-        try:
-            print(f"开始处理乐谱文件：{score_path}")
+        print(f"开始处理乐谱文件：{score_path}")
 
-            # 验证文件
-            if not os.path.exists(score_path):
-                raise FileNotFoundError(f"乐谱文件不存在：{score_path}")
+        # 验证文件
+        if not os.path.exists(score_path):
+            raise FileNotFoundError(f"乐谱文件不存在：{score_path}")
 
-            # 步骤1: 解析乐谱
-            print("步骤1: 解析MusicXML乐谱...")
-            song = self._decode_score(score_path)
-            print(f"✓ 乐谱解析完成，包含 {len(song.trackList)} 个音轨")
+        # step1: 解析乐谱
+        print("step1: 解析MusicXML乐谱...")
+        song = self._decode_score(score_path)
+        print(f"乐谱解析完成，包含 {len(song.trackList)} 个音轨")
 
-            # 步骤2: 语音合成
-            print("步骤2: 生成基础语音...")
-            song = self._generate_speech(song)
-            print("✓ 基础语音生成完成")
+        # step2: 语音合成
+        print("step2: 生成基础语音...")
+        song = self._generate_speech(song)
+        print("基础语音生成完成")
 
-            # 步骤3: 音高校正
-            print("步骤3: 进行音高校正...")
-            song = self._adjust_pitch(song)
-            print("✓ 音高校正完成")
+        # step3: 音高
+        print("step3: 进行音高调整...")
+        song = self._adjust_pitch(song)
+        print("音高调整完成")
 
-            # 步骤4: 平滑连接
-            print("步骤4: 平滑连接音频段落...")
-            song = self._smooth_connect(song)
-            print("✓ 音频段落连接完成")
+        # step4: 平滑连接
+        print("step4: 连接音频段落...")
+        song = self._smooth_connect(song)
+        print("音频段落连接完成")
 
-            # 步骤5: 输出装配
-            print("步骤5: 生成最终输出文件...")
-            output_path = self._generate_output(song)
-            print("✓ 最终输出文件生成完成")
+        # step5: 输出装配
+        print("step5: 生成最终输出文件...")
+        output_path = self._generate_output(song)
+        print("最终输出文件生成完成")
+        print(f"输出文件：{output_path}")
 
-            print(f"🎵 Florence歌声合成完成！")
-            print(f"📁 输出文件：{output_path}")
-
-            return output_path
-
-        except Exception as e:
-            print(f"🚫 处理过程中出现错误：{e}")
-            traceback.print_exc()
-            return None
+        return output_path
 
     def _decode_score(self, score_path: str):
         """阶段1：乐谱解析"""
