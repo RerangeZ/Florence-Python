@@ -3,8 +3,6 @@
 Florence歌声合成引擎 - 主程序
 """
 
-import sys
-import os
 from FlorenceEngine.FlorenceEngine import FlorenceEngine
 
 def main():
