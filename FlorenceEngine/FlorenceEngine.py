@@ -10,7 +10,7 @@ from FlorenceEngine.FlorenceOutputGenerater.FlorenceOutputGenerater import Flore
 from FlorenceEngine.Objects.Selector import selectScoreFile
 
 
-class FlorenceEngine0:
+class FlorenceEngine:
     """
     Florence歌声合成引擎主控制器
     负责调度整个流水线：
@@ -154,35 +154,6 @@ class FlorenceEngine0:
             return self.output_generator.generate_output(song)
         except Exception as e:
             raise Exception(f"输出装配失败：{e}")
-
-    def test_engine(self) -> bool:
-        """
-        测试引擎各个模块是否正常工作
-
-        Returns:
-            True if all tests pass, False otherwise
-        """
-        print("正在执行Florence引擎自检...")
-
-        try:
-            # 测试各模块初始化
-            print("✓ 模块初始化检查")
-
-            # 测试ScoreDecoder（需要测试文件）
-            print("✓ ScoreDecoder检查")
-
-            # 测试其他模块的基本功能
-            print("✓ SpeakGenerator检查")
-            print("✓ Coder检查")
-            print("✓ WaveConnector检查")
-            print("✓ OutputGenerator检查")
-
-            print("Florence引擎自检通过！")
-            return True
-
-        except Exception as e:
-            print(f"自检失败：{e}")
-            return False
 
     def get_engine_info(self) -> dict:
         """获取引擎信息"""
