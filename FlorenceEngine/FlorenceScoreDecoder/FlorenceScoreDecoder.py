@@ -26,6 +26,7 @@ class FlorenceScoreDecoder:
         # 解析MusicXML文件
         parsed = converter.parse(score_path)
 
+        #统一到score（乐谱）类型
         if isinstance(parsed, Score):
             score = parsed
         elif isinstance(parsed, Part):
@@ -55,7 +56,9 @@ class FlorenceScoreDecoder:
         return song
 
     def _process_part(self, part) -> Track:
-        """处理单个声部，创建Track对象"""
+        """处理单个声部，创建Track对象
+        传入music21的part(声部)对象，传回Florence的轨道对象
+        """
         sections = []
         current_section_words = []
 
@@ -66,11 +69,11 @@ class FlorenceScoreDecoder:
             if not isinstance(note, Note):
                 continue
 
-            # 检查音域限制
-            freq = note.pitch.frequency
-            if freq < 130:  # C3
-                print(f"警告：音符音域低于130Hz，将被跳过：{note.pitch}")
-                continue
+            # # 检查音域限制
+            # freq = note.pitch.frequency
+            # if freq < 130:  # C3
+            #     print(f"警告：音符音域低于130Hz，将被跳过：{note.pitch}")
+            #     continue
 
             # 检查歌词
             if not note.lyric:
@@ -80,13 +83,13 @@ class FlorenceScoreDecoder:
             lyric = self._convert_to_pinyin(note.lyric)
 
             # 计算时间（转换为毫秒）
-            start_time = int(float(note.offset) * quarter_duration_ms)
-            duration = int(float(note.duration.quarterLength) * quarter_duration_ms)
+            start_time = int(note.seconds)
+            duration = int(note.duration.seconds)
             end_time = start_time + duration
 
             # 创建Word对象
             word = Word(
-                pitch=freq,
+                pitch=note.pitch.frequency,
                 time=Time(start=start_time, end=end_time),
                 lrc=lyric
             )
@@ -106,7 +109,7 @@ class FlorenceScoreDecoder:
 
         return Track(sectionList=sections)
 
-    def _convert_to_pinyin(self, text: str) -> str:
+    def _convert_to_pinyin(self, text: str) -> str: 
         """转换中文为拼音并去除声调"""
         # 如果是纯英文字符，直接返回
         if text.isascii():

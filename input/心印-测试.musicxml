@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="4.0">
   <identification>
     <encoding>
       <software>MuseScore 4.4.2</software>
-      <encoding-date>2025-11-18</encoding-date>
+      <encoding-date>2025-11-19</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="yes" value="yes"/>
@@ -106,10 +107,10 @@
         <direction-type>
           <metronome parentheses="no" default-x="-31.17" relative-y="20">
             <beat-unit>quarter</beat-unit>
-            <per-minute>120</per-minute>
+            <per-minute>84</per-minute>
             </metronome>
           </direction-type>
-        <sound tempo="120"/>
+        <sound tempo="84"/>
         </direction>
       <note default-x="123.84" default-y="-40" dynamics="102.22">
         <pitch>
